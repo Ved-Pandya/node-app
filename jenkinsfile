@@ -1,0 +1,48 @@
+pipline{
+    agent any
+
+    environment{
+        IMAGE_NAME = "node-app"
+        CONTAINER_NAME = "node-app"
+    }
+}
+
+stages
+{
+    stage('Clone Repository')
+    {
+        steps
+        {
+            git 'https://github.com/Ved-Pandya/node-app.git'
+        }
+    }
+    stage('Build Docker Image')
+    {
+        steps
+        {
+            script
+            {
+                sh'docker build -t ${IMAGE_NAME}:latest npm test || true'
+            }
+            
+        }
+    }
+    stage('Deploy Application') {
+            steps {
+                script {
+                    sh 'docker stop ${CONTAINER_NAME} || true'
+                    sh 'docker rm ${CONTAINER_NAME} || true'
+                    sh 'docker run -d -p 3000:3000 --name ${CONTAINER_NAME} ${IMAGE_NAME}:latest'
+                }
+            }
+        }
+}
+
+post {
+        success {
+            echo "Deployment Successful! 🎉"
+        }
+        failure {
+            echo "Build Failed ❌"
+        }
+    }
